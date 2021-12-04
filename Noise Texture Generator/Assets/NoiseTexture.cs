@@ -5,33 +5,25 @@ using UnityEngine.UI;
 
 public class NoiseTexture : MonoBehaviour
 {
-    // Width and height of the texture in pixels.
     public int pixWidth;
     public int pixHeight;
 
-    // The origin of the sampled area in the plane.
     public float xOrg;
     public float yOrg;
 
-    // The number of cycles of the basic noise pattern that are repeated
-    // over the width and height of the texture.
-    public float scale = 1.0F;
+    float scale = 3f;
 
-    public float multiplier;
+    float multiplier = 1;
+    public float power = 1;
 
     private Texture2D noiseTex;
-    private  Color[] pix;
+    private Color[] pix;
     private Renderer rend;
-    private SpriteRenderer r;
-
-    public Image image;
 
     void Start()
     {
         rend = GetComponent<Renderer>();
-        r = GetComponent<SpriteRenderer>();
 
-        // Set up the texture and a Color array to hold pixels during processing.
         noiseTex = new Texture2D(pixWidth, pixHeight);
         pix = new Color[noiseTex.width * noiseTex.height];
         rend.material.mainTexture = noiseTex;
@@ -39,34 +31,41 @@ public class NoiseTexture : MonoBehaviour
 
     void CalcNoise()
     {
-        // For each pixel in the texture...
-        float y = 0.0F;
+        float y = 0f;
 
         while (y < noiseTex.height)
         {
-            float x = 0.0F;
+            float x = 0f;
             while (x < noiseTex.width)
             {
                 float xCoord = xOrg + x / noiseTex.width * scale;
                 float yCoord = yOrg + y / noiseTex.height * scale;
-                float sample = Mathf.PerlinNoise(xCoord, yCoord) * multiplier;
+                float sample = Mathf.PerlinNoise(xCoord, yCoord) * multiplier;//ReturnStepValue(Mathf.Pow(Mathf.PerlinNoise(xCoord, yCoord) * multiplier, power));
                 pix[(int)y * noiseTex.width + (int)x] = new Color(sample, sample, sample);
                 x++;
             }
             y++;
         }
 
-        // Copy the pixel data to the texture and load it into the GPU.
         noiseTex.SetPixels(pix);
         noiseTex.Apply();
-
-        //r.sprite = Sprite.Create(noiseTex, new Rect(Vector2.zero, new Vector2(100, 100)), new Vector2(50, 50));
-        //image.sprite = r.sprite;
     }
 
     void Update()
     {
         CalcNoise();
-        Debug.Log(pix[pix.Length / 2].r);
+
+        xOrg += Input.GetAxisRaw("Horizontal") * Time.deltaTime;
+        yOrg += Input.GetAxisRaw("Vertical") * Time.deltaTime;
+    }
+
+    float ReturnStepValue(float a)
+    {
+        return Mathf.Floor(a * 10) / 10f;
+    }
+
+    public float ReturnNoiseMapValue(int a)
+    {
+        return pix[a].r;
     }
 }
